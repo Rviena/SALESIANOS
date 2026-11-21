@@ -47,6 +47,8 @@ def control(db: Session, match: Match, action: str, winner_id=None, decision=Non
     elif action == "finish":
         if match.home_score is None or match.away_score is None:
             raise HTTPException(422, "Ingresa ambos marcadores antes de finalizar")
+        if decision == "penalties" and match.home_score != match.away_score:
+            raise HTTPException(422, "Los penales requieren un marcador empatado")
         if winner_id and winner_id not in (match.home_id, match.away_id):
             raise HTTPException(422, "El ganador debe ser uno de los equipos del partido")
         if match.home_score != match.away_score:
