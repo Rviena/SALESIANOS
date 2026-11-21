@@ -24,16 +24,25 @@ def seed():
         if db.scalar(select(Tournament.id).limit(1)) is not None:
             return False
         db.add(Tournament(id=1, name="Salesianos FEST 2026"))
+        db.flush()
         db.add(Competition(id=1, tournament_id=1, discipline="Fulbito",
                            category="Interpromociones", win_points=3, draw_points=1))
+        db.flush()
+        db.add_all(Group(id=group["id"], competition_id=1, revision=0)
+                   for group in fixture["groups"])
+        db.flush()
         seen = set()
         for group in fixture["groups"]:
-            db.add(Group(id=group["id"], competition_id=1, revision=0))
             for label in group["teams"]:
                 if label not in seen:
                     db.add(Promotion(id=label, label=label)); seen.add(label)
+        db.flush()
+        for group in fixture["groups"]:
+            for label in group["teams"]:
                 db.add(Team(id=label, promotion_id=label, competition_id=1,
                             group_id=group["id"], name=label))
+        db.flush()
+        for group in fixture["groups"]:
             for match in group["matches"]:
                 date = datetime.fromisoformat(f"{EVENT_DATE}T{match['start']}:00").replace(tzinfo=LOCAL_ZONE).astimezone(timezone.utc)
                 db.add(Match(id=match["id"], competition_id=1, group_id=group["id"],

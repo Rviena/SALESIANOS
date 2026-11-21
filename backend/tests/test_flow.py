@@ -11,6 +11,10 @@ def test_group_live_finish_and_knockout(tmp_path, monkeypatch):
 
     import app.core.database as database
     importlib.reload(database)
+    from sqlalchemy import event
+    @event.listens_for(database.engine, "connect")
+    def enforce_foreign_keys(connection, _):
+        connection.execute("PRAGMA foreign_keys=ON")
     import app.models.entities as entities
     database.Base.metadata.create_all(database.engine)
     from app.seed import seed
